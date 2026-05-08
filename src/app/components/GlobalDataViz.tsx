@@ -1,8 +1,7 @@
 import { motion } from "motion/react";
 import { useState, useEffect } from "react";
 import api from "../api";
-import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+
 interface AirQualityData {
   city: string;
   aqi: number;
@@ -15,24 +14,51 @@ export function GlobalDataViz() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
 
+  const getAqiColor = (aqi: number) => {
+    if (aqi <= 50) return "#10B981";
+    if (aqi <= 100) return "#F59E0B";
+    if (aqi <= 150) return "#F97316";
+    if (aqi <= 200) return "#EF4444";
+    return "#7C3AED";
+  };
+
   const [points, setPoints] = useState([
-    { id: 1, lat: 40.7128, lng: -74.0060, label: "New York", value: 2.3, suffix: "M", color: "#10B981" },
-    { id: 2, lat: 51.5074, lng: -0.1278, label: "London", value: 1.8, suffix: "M", color: "#3B82F6" },
-    { id: 3, lat: 35.6762, lng: 139.6503, label: "Tokyo", value: 4.1, suffix: "M", color: "#10B981" },
-    { id: 4, lat: -23.5505, lng: -46.6333, label: "São Paulo", value: 890, suffix: "K", color: "#F59E0B" },
-    { id: 5, lat: -1.2921, lng: 36.8219, label: "Nairobi", value: 1.2, suffix: "M", color: "#3B82F6" },
-    { id: 6, lat: -33.8688, lng: 151.2093, label: "Sydney", value: 520, suffix: "K", color: "#10B981" },
+    { id: 1, x: 15, y: 20, label: "North America (New York)", value: 0, suffix: "", color: "#10B981" },
+    { id: 2, x: 45, y: 25, label: "Europe (London)", value: 0, suffix: "", color: "#3B82F6" },
+    { id: 3, x: 70, y: 35, label: "Asia (Tokyo)", value: 0, suffix: "", color: "#10B981" },
+    { id: 4, x: 20, y: 65, label: "South America (São Paulo)", value: 0, suffix: "", color: "#F59E0B" },
+    { id: 5, x: 50, y: 70, label: "Africa (Nairobi)", value: 0, suffix: "", color: "#3B82F6" },
+    { id: 6, x: 80, y: 75, label: "Australia (Sydney)", value: 0, suffix: "", color: "#10B981" },
   ]);
 
+  const connections = [
+    [1, 2], [2, 3], [1, 4], [2, 5], [4, 5], [3, 6], [5, 6]
+  ];
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPoints(prev => prev.map(p => {
-        const change = p.suffix === "M" ? (Math.random() - 0.5) * 0.05 : (Math.random() - 0.5) * 5;
-        let newNum = p.value + change;
-        if (newNum < 0) newNum = p.suffix === "M" ? 0.1 : 10;
-        return { ...p, value: newNum };
-      }));
-    }, 2000);
+    const fetchAqi = async () => {
+      try {
+        const url = "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=40.7128,51.5074,35.6762,-23.5505,-1.2921,-33.8688&longitude=-74.0060,-0.1278,139.6503,-46.6333,36.8219,151.2093&current=us_aqi";
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        if (data && Array.isArray(data) && data.length >= 6) {
+          const getAqi = (index: number) => data[index]?.current?.us_aqi || 50;
+          setPoints([
+            { id: 1, x: 15, y: 20, label: "North America (New York)", value: getAqi(0), suffix: "", color: getAqiColor(getAqi(0)) },
+            { id: 2, x: 45, y: 25, label: "Europe (London)", value: getAqi(1), suffix: "", color: getAqiColor(getAqi(1)) },
+            { id: 3, x: 70, y: 35, label: "Asia (Tokyo)", value: getAqi(2), suffix: "", color: getAqiColor(getAqi(2)) },
+            { id: 4, x: 20, y: 65, label: "South America (São Paulo)", value: getAqi(3), suffix: "", color: getAqiColor(getAqi(3)) },
+            { id: 5, x: 50, y: 70, label: "Africa (Nairobi)", value: getAqi(4), suffix: "", color: getAqiColor(getAqi(4)) },
+            { id: 6, x: 80, y: 75, label: "Australia (Sydney)", value: getAqi(5), suffix: "", color: getAqiColor(getAqi(5)) },
+          ]);
+        }
+      } catch (e) {
+        console.error("Failed to load global AQI", e);
+      }
+    };
+    fetchAqi();
+    const interval = setInterval(fetchAqi, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -53,13 +79,6 @@ export function GlobalDataViz() {
     }
   };
 
-  const getAqiColor = (aqi: number) => {
-    if (aqi <= 50) return "#10B981";
-    if (aqi <= 100) return "#F59E0B";
-    if (aqi <= 150) return "#F97316";
-    if (aqi <= 200) return "#EF4444";
-    return "#7C3AED";
-  };
 
   const getAqiLabel = (aqi: number) => {
     if (aqi <= 50) return "Good";
@@ -201,28 +220,92 @@ export function GlobalDataViz() {
           viewport={{ once: true, margin: "-100px" }}
         >
           <div className="backdrop-blur-[24px] bg-white/5 border border-white/10 rounded-3xl p-8 overflow-hidden">
-            <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden z-0">
-              <MapContainer center={[20, 0]} zoom={2} scrollWheelZoom={false} className="w-full h-full">
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                  url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                />
-                {points.map((point) => (
-                  <CircleMarker 
-                    key={point.id} 
-                    center={[point.lat, point.lng]} 
-                    pathOptions={{ color: point.color, fillColor: point.color, fillOpacity: 0.6 }}
-                    radius={Math.max(point.value * (point.suffix === 'M' ? 5 : 0.05), 8)}
-                  >
-                    <Popup className="bg-[#050505] text-white border-white/10 rounded-lg p-2">
-                      <div className="text-xs text-black font-semibold">{point.label}</div>
-                      <div className="font-bold" style={{ color: point.color }}>
-                        {point.suffix === "M" ? point.value.toFixed(2) : Math.round(point.value)}{point.suffix} tons saved
-                      </div>
-                    </Popup>
-                  </CircleMarker>
-                ))}
-              </MapContainer>
+            <div className="relative w-full aspect-[16/9] bg-gradient-to-br from-[#050505] to-[#0a0a0a] rounded-2xl overflow-hidden">
+              {/* Grid background */}
+              <div className="absolute inset-0 opacity-10"
+                style={{
+                  backgroundImage: 'linear-gradient(rgba(16,185,129,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.3) 1px, transparent 1px)',
+                  backgroundSize: '40px 40px',
+                }} />
+
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-60" />
+
+              {/* Connecting Lines */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                {connections.map(([fromId, toId], i) => {
+                  const from = points.find(p => p.id === fromId)!;
+                  const to = points.find(p => p.id === toId)!;
+                  return (
+                    <g key={`connection-${fromId}-${toId}`}>
+                      <motion.line
+                        x1={`${from.x}%`}
+                        y1={`${from.y}%`}
+                        x2={`${to.x}%`}
+                        y2={`${to.y}%`}
+                        stroke="rgba(255,255,255,0.15)"
+                        strokeWidth="2"
+                        initial={{ pathLength: 0, opacity: 0 }}
+                        whileInView={{ pathLength: 1, opacity: 1 }}
+                        transition={{ duration: 1.5, delay: i * 0.1 }}
+                        viewport={{ once: true }}
+                      />
+                      <motion.line
+                        x1={`${from.x}%`}
+                        y1={`${from.y}%`}
+                        x2={`${to.x}%`}
+                        y2={`${to.y}%`}
+                        stroke={from.color}
+                        strokeWidth="2"
+                        strokeDasharray="4 12"
+                        initial={{ strokeDashoffset: 100, opacity: 0 }}
+                        animate={{ strokeDashoffset: 0, opacity: [0, 0.6, 0] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: i * 0.5 }}
+                      />
+                    </g>
+                  );
+                })}
+              </svg>
+
+              {/* Data points */}
+              {points.map((point, index) => (
+                <motion.div key={point.id}
+                  initial={{ opacity: 0, scale: 0 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className="absolute group cursor-pointer"
+                  style={{ left: `${point.x}%`, top: `${point.y}%`, transform: 'translate(-50%, -50%)' }}>
+
+                  <motion.div
+                    animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0.6, 0.4] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: index * 0.2 }}
+                    className="absolute w-16 h-16 rounded-full blur-xl"
+                    style={{ backgroundColor: point.color, transform: 'translate(-50%, -50%)' }} />
+
+                  <div className="relative w-4 h-4 rounded-full border-2"
+                    style={{ backgroundColor: point.color, borderColor: point.color, boxShadow: `0 0 20px ${point.color}` }} />
+
+                  <motion.div initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }} whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
+                    className="absolute top-6 left-1/2 -translate-x-1/2 backdrop-blur-[24px] bg-white/10 border border-white/20 rounded-lg px-3 py-2 whitespace-nowrap">
+                    <div className="text-xs text-white/60">{point.label}</div>
+                    <div className="font-semibold transition-all duration-300" style={{ color: point.color }}>
+                      {Math.round(point.value)}
+                    </div>
+                    <div className="text-xs text-white/40">Live AQI</div>
+                  </motion.div>
+                </motion.div>
+              ))}
+
+              {/* Floating particles */}
+              {[...Array(20)].map((_, i) => (
+                <motion.div key={`particle-${i}`}
+                  animate={{ y: [0, -30, 0], x: [0, Math.random() * 20 - 10, 0], opacity: [0, 0.6, 0] }}
+                  transition={{ duration: 3 + Math.random() * 2, repeat: Infinity, delay: Math.random() * 2 }}
+                  className="absolute w-1 h-1 bg-[#10B981] rounded-full"
+                  style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }} />
+              ))}
             </div>
 
             {/* Stats bar */}

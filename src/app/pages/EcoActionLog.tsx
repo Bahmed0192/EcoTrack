@@ -2,6 +2,8 @@ import { motion } from "motion/react";
 import { useState, useEffect } from "react";
 import api from "../api";
 import { useAuthStore } from "../store/authStore";
+import confetti from "canvas-confetti";
+import { toast } from "sonner";
 
 const ACTION_PRESETS = [
   { category: "Transport", description: "Biked to work", co2_saved: 2.4, points_earned: 25, icon: "🚲" },
@@ -45,7 +47,7 @@ export function EcoActionLog() {
   };
 
   const logAction = async (preset: typeof ACTION_PRESETS[0]) => {
-    if (!isAuthenticated) { alert("Please sign in first!"); return; }
+    if (!isAuthenticated) { toast.error("Please sign in first!"); return; }
     setIsLoading(true);
     try {
       const res = await api.post("/actions", {
@@ -56,9 +58,19 @@ export function EcoActionLog() {
       });
       setActions([res.data, ...actions]);
       setJustLogged(res.data._id);
+      
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10B981', '#3B82F6', '#F59E0B']
+      });
+      toast.success(`Awesome! You earned ${res.data.points_earned} points! 🌱`);
+      
       setTimeout(() => setJustLogged(null), 2000);
     } catch (err) {
       console.error("Failed to log action:", err);
+      toast.error("Failed to log action.");
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +78,7 @@ export function EcoActionLog() {
 
   const logCustomAction = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAuthenticated) { alert("Please sign in first!"); return; }
+    if (!isAuthenticated) { toast.error("Please sign in first!"); return; }
     setIsLoading(true);
     try {
       const res = await api.post("/actions", custom);
@@ -74,9 +86,19 @@ export function EcoActionLog() {
       setJustLogged(res.data._id);
       setCustom({ category: "Transport", description: "", co2_saved: 1, points_earned: 10 });
       setCustomMode(false);
+      
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10B981', '#3B82F6', '#F59E0B']
+      });
+      toast.success(`Great job! You earned ${res.data.points_earned} points! 🌍`);
+      
       setTimeout(() => setJustLogged(null), 2000);
     } catch (err) {
       console.error("Failed to log action:", err);
+      toast.error("Failed to log custom action.");
     } finally {
       setIsLoading(false);
     }
@@ -150,15 +172,17 @@ export function EcoActionLog() {
               {ACTION_PRESETS.map((preset, i) => (
                 <motion.button key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                   onClick={() => logAction(preset)} disabled={isLoading}
-                  className="backdrop-blur-[24px] bg-white/5 border border-white/10 rounded-xl p-4 text-left hover:bg-white/10 transition-all duration-300 group disabled:opacity-50">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">{preset.icon}</span>
-                    <span className="text-xs text-white/40 px-2 py-0.5 rounded-full bg-white/5">{preset.category}</span>
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="backdrop-blur-[24px] bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-xl p-5 text-left hover:border-[#10B981]/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] transition-all duration-300 group disabled:opacity-50">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="text-3xl bg-white/5 p-2 rounded-lg group-hover:scale-110 transition-transform">{preset.icon}</div>
+                    <span className="text-xs text-[#10B981] uppercase tracking-wider font-semibold">{preset.category}</span>
                   </div>
-                  <div className="text-sm font-medium mb-1">{preset.description}</div>
-                  <div className="flex justify-between text-xs text-white/50">
-                    <span className="text-[#10B981]">+{preset.points_earned} pts</span>
-                    <span className="text-[#3B82F6]">-{preset.co2_saved} kg CO₂</span>
+                  <div className="text-base font-semibold mb-2 group-hover:text-white transition-colors">{preset.description}</div>
+                  <div className="flex justify-between items-center mt-4 pt-3 border-t border-white/10">
+                    <span className="text-[#10B981] font-bold text-sm bg-[#10B981]/10 px-2 py-1 rounded-md">+{preset.points_earned} pts</span>
+                    <span className="text-[#3B82F6] text-xs font-medium">-{preset.co2_saved} kg CO₂</span>
                   </div>
                 </motion.button>
               ))}

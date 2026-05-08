@@ -93,7 +93,7 @@ export function Footer() {
           </p>
           <div className="flex items-center gap-2 text-white/60 text-sm">
             <span>Powered by</span>
-            <span className="text-[#10B981]">AI & Real-time Data</span>
+            <span className="text-[#10B981]">Bug&Error</span>
           </div>
         </motion.div>
       </div>

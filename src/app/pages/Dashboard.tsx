@@ -4,6 +4,8 @@ import * as Tabs from "@radix-ui/react-tabs";
 import { Link } from "react-router";
 import api from "../api";
 import { useAuthStore } from "../store/authStore";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface FootprintLog {
   _id: string;
@@ -75,6 +77,28 @@ export function Dashboard() {
   };
   const level = getLevel(user?.total_eco_points || totalPoints);
 
+  const handleShare = () => {
+    const text = `I just saved ${totalCO2Saved.toFixed(1)}kg of CO2 and reached ${level.name} tier on EcoTrack! 🌍 Join me in making an impact!`;
+    const url = "https://ecotrack.com";
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
+  };
+
+  const handleDownloadPDF = async () => {
+    const element = document.getElementById("analytics-report");
+    if (!element) return;
+    try {
+      const canvas = await html2canvas(element, { backgroundColor: "#050505" });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("EcoTrack_Monthly_Report.pdf");
+    } catch (err) {
+      console.error("Failed to generate PDF", err);
+    }
+  };
+
   return (
     <div className="pt-32 pb-24 px-4">
       <div className="max-w-7xl mx-auto">
@@ -87,11 +111,20 @@ export function Dashboard() {
           <h1 style={{ fontSize: 'clamp(36px, 6vw, 56px)', fontWeight: 700, letterSpacing: '-0.02em' }}>
             Your <span className="text-[#10B981]">Dashboard</span>
           </h1>
-          <p className="text-white/60 mt-4">
-            {isAuthenticated
-              ? `Welcome back, ${user?.name}! Here's your sustainability overview.`
-              : "Sign in to see your personalized sustainability data."}
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4">
+            <p className="text-white/60">
+              {isAuthenticated
+                ? `Welcome back, ${user?.name}! Here's your sustainability overview.`
+                : "Sign in to see your personalized sustainability data."}
+            </p>
+            <button 
+              onClick={handleShare}
+              className="mt-4 sm:mt-0 px-4 py-2 bg-[#1DB954] hover:bg-[#1ed760] text-black font-semibold rounded-full flex items-center gap-2 transition-colors text-sm w-fit"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+              Share Score
+            </button>
+          </div>
         </motion.div>
 
         {/* Stats Grid */}
@@ -219,8 +252,18 @@ export function Dashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               className="backdrop-blur-[24px] bg-white/5 border border-white/10 rounded-3xl p-8"
+              id="analytics-report"
             >
-              <h3 className="mb-8" style={{ fontSize: '24px', fontWeight: 600 }}>Carbon Breakdown</h3>
+              <div className="flex justify-between items-center mb-8">
+                <h3 style={{ fontSize: '24px', fontWeight: 600 }}>Carbon Breakdown</h3>
+                <button 
+                  onClick={handleDownloadPDF}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-sm transition-colors flex items-center gap-2"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  Download Monthly Report
+                </button>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[
                   { category: "Transportation", value: actions.filter(a => a.category === 'Transport').reduce((s, a) => s + a.co2_saved, 0).toFixed(1), color: "#3B82F6" },

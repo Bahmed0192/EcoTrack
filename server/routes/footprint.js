@@ -58,12 +58,12 @@ router.post('/calculate', auth, async (req, res) => {
         - Diet: ${food}
         - Shopping: $${shopping}/month
         Total CO2: ${total_co2.toFixed(1)} kg.
-        Give them ONE short, highly specific, and actionable sustainability tip based on their highest emission category. Keep it to 2 sentences max. Be encouraging.`;
+        Generate a personalized weekly green action plan with 3 bullet points. For each bullet point, estimate the CO2 savings in kg. Keep it concise but specific.`;
 
         const completion = await openai.chat.completions.create({
           messages: [{ role: "user", content: prompt }],
           model: "gpt-3.5-turbo",
-          max_tokens: 60,
+          max_tokens: 150,
         });
 
         aiTip = completion.choices[0].message.content;

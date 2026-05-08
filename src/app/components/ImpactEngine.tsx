@@ -306,9 +306,9 @@ export function ImpactEngine() {
                 </div>
               </div>
 
-              <p className="text-white/80 text-sm mb-4">
+              <div className="text-white/80 text-sm mb-4 whitespace-pre-line">
                 {aiTip}
-              </p>
+              </div>
 
               <button 
                 onClick={handleCalculate}

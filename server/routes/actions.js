@@ -1,6 +1,7 @@
 const express = require('express');
 const EcoAction = require('../models/EcoAction');
 const User = require('../models/User');
+const ActionCache = require('../models/ActionCache');
 const jwt = require('jsonwebtoken');
 const OpenAI = require('openai');
 
@@ -36,6 +37,21 @@ const ACTION_PRESETS_WHITELIST = {
 
 // Helper: call OpenAI to calculate CO2 impact for a custom action
 async function calculateWithAI(description) {
+  const cacheKey = description.trim().toLowerCase();
+  
+  // 1. Check cache first
+  const cachedAction = await ActionCache.findOne({ description: cacheKey });
+  if (cachedAction) {
+    console.log("Returning cached result for:", cacheKey);
+    return {
+      category: cachedAction.category,
+      co2_saved: cachedAction.co2_saved,
+      points_earned: cachedAction.points_earned,
+      tip: cachedAction.tip || "Every small action counts towards a greener planet!"
+    };
+  }
+
+  // 2. Call OpenAI if not in cache
   const prompt = `You are a carbon footprint expert. A user logged this eco-friendly action: "${description}"
 
 Respond ONLY with a valid JSON object (no markdown, no explanation) in this exact format:
@@ -61,7 +77,23 @@ Rules:
   const text = response.choices[0].message.content.trim();
   // Strip markdown code fences if present
   const cleaned = text.replace(/```json|```/g, '').trim();
-  return JSON.parse(cleaned);
+  const result = JSON.parse(cleaned);
+
+  // 3. Save the new calculation to cache
+  try {
+    await ActionCache.create({
+      description: cacheKey,
+      category: result.category,
+      co2_saved: result.co2_saved,
+      points_earned: result.points_earned,
+      tip: result.tip
+    });
+    console.log("Saved new action to cache:", cacheKey);
+  } catch (err) {
+    console.error('Cache save error:', err.message);
+  }
+
+  return result;
 }
 
 // ─────────────────────────────────────────────────────────────

@@ -17,7 +17,10 @@ app.get('/', (req, res) => {
 });
 
 // Database Connection
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/ecotrack')
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/ecotrack', {
+  tls: true,
+  tlsAllowInvalidCertificates: true
+})
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.error('MongoDB Connection Error:', err));
 

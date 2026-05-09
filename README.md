@@ -10,6 +10,7 @@ By combining real-time carbon footprint calculations with gamification and AI-po
 - **🌍 3D Interactive Earth Animation:** A lightweight, custom Three.js shader-based Earth animation on the landing page for a premium feel.
 - **🏆 Gamification & Progression:** Earn EcoPoints, build daily streaks, and level up from Bronze to Platinum by logging green actions.
 - **🤖 AI Sustainability Advisor:** Receive highly specific, actionable, and personalized tips powered by OpenAI based on your highest emission categories.
+- **🧠 AI-Powered Eco-Action Logging:** Log custom sustainable actions in plain text. The AI securely calculates the estimated CO2 saved and awards points accordingly, complete with personalized encouragement.
 - **📊 Global Data Viz (Live AQI):** Search for any city worldwide to view real-time Air Quality Index (AQI) data and health advisories powered by Open-Meteo.
 - **📄 Downloadable PDF Reports:** Generate monthly analytic reports of your carbon footprint breakdown and progress.
 - **👥 Community Challenges:** Organizers can create challenges. Users can join to hit shared sustainability metrics.

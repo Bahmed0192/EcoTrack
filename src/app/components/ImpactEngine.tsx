@@ -16,7 +16,7 @@ export function ImpactEngine() {
   const [aiTip, setAiTip] = useState<string>("Ready to analyze your footprint.");
   const [isCalculating, setIsCalculating] = useState(false);
 
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
 
   const handleCalculate = async () => {
     if (!isAuthenticated) {
@@ -48,10 +48,20 @@ export function ImpactEngine() {
   };
 
   // Streak data (30 days)
-  const streakData = Array.from({ length: 30 }, (_, i) => ({
-    day: i + 1,
-    intensity: Math.floor(Math.random() * 5),
-  }));
+  const streakData = Array.from({ length: 30 }, (_, i) => {
+    if (isAuthenticated && user) {
+      const activeDays = Math.min(user.streak_days || 0, 30);
+      const isDayActive = i >= (30 - activeDays);
+      return {
+        day: i + 1,
+        intensity: isDayActive ? Math.floor(Math.random() * 4) + 1 : 0,
+      };
+    }
+    return {
+      day: i + 1,
+      intensity: Math.floor(Math.random() * 5),
+    };
+  });
 
   return (
     <section className="relative py-24 px-4">
@@ -238,7 +248,9 @@ export function ImpactEngine() {
                 <p className="text-white/60 text-sm mt-1">Your consistency journey</p>
               </div>
               <div className="text-right">
-                <div className="text-[#10B981]" style={{ fontSize: '28px', fontWeight: 700 }}>24 days</div>
+                <div className="text-[#10B981]" style={{ fontSize: '28px', fontWeight: 700 }}>
+                  {isAuthenticated && user ? user.streak_days || 0 : 24} days
+                </div>
                 <div className="text-white/60 text-xs">Current streak</div>
               </div>
             </div>

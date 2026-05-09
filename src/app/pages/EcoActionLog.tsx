@@ -56,8 +56,17 @@ export function EcoActionLog() {
         co2_saved: preset.co2_saved,
         points_earned: preset.points_earned,
       });
-      setActions([res.data, ...actions]);
-      setJustLogged(res.data._id);
+      const { action, user: updatedUser } = res.data;
+      setActions([action, ...actions]);
+      setJustLogged(action._id);
+      
+      // Refresh store with updated streak & points
+      if (updatedUser) {
+        useAuthStore.getState().updateUser({
+          total_eco_points: updatedUser.total_eco_points,
+          streak_days: updatedUser.streak_days,
+        });
+      }
       
       confetti({
         particleCount: 100,
@@ -65,7 +74,7 @@ export function EcoActionLog() {
         origin: { y: 0.6 },
         colors: ['#10B981', '#3B82F6', '#F59E0B']
       });
-      toast.success(`Awesome! You earned ${res.data.points_earned} points! 🌱`);
+      toast.success(`Awesome! You earned ${action.points_earned} points! 🌱 Streak: ${updatedUser?.streak_days || 0} days 🔥`);
       
       setTimeout(() => setJustLogged(null), 2000);
     } catch (err) {
@@ -82,10 +91,19 @@ export function EcoActionLog() {
     setIsLoading(true);
     try {
       const res = await api.post("/actions", custom);
-      setActions([res.data, ...actions]);
-      setJustLogged(res.data._id);
+      const { action, user: updatedUser } = res.data;
+      setActions([action, ...actions]);
+      setJustLogged(action._id);
       setCustom({ category: "Transport", description: "", co2_saved: 1, points_earned: 10 });
       setCustomMode(false);
+      
+      // Refresh store with updated streak & points
+      if (updatedUser) {
+        useAuthStore.getState().updateUser({
+          total_eco_points: updatedUser.total_eco_points,
+          streak_days: updatedUser.streak_days,
+        });
+      }
       
       confetti({
         particleCount: 100,
@@ -93,7 +111,7 @@ export function EcoActionLog() {
         origin: { y: 0.6 },
         colors: ['#10B981', '#3B82F6', '#F59E0B']
       });
-      toast.success(`Great job! You earned ${res.data.points_earned} points! 🌍`);
+      toast.success(`Great job! You earned ${action.points_earned} points! 🌍`);
       
       setTimeout(() => setJustLogged(null), 2000);
     } catch (err) {

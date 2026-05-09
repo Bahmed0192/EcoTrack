@@ -98,6 +98,20 @@ export function CommunityHub() {
     if (!isAuthenticated) { alert("Please sign in to join challenges!"); return; }
     
     const isJoined = joinedIds.has(challengeId);
+    const isSeed = challengeId.startsWith('seed');
+
+    if (isSeed) {
+      // Handle seed/demo challenges locally without API calls
+      if (isJoined) {
+        setJoinedIds(prev => { const n = new Set(prev); n.delete(challengeId); return n; });
+        setChallenges(prev => prev.map(c => c._id === challengeId ? { ...c, participant_count: c.participant_count - 1 } : c));
+      } else {
+        setJoinedIds(prev => new Set(prev).add(challengeId));
+        setChallenges(prev => prev.map(c => c._id === challengeId ? { ...c, participant_count: c.participant_count + 1 } : c));
+      }
+      return;
+    }
+
     try {
       if (isJoined) {
         await api.put(`/challenges/${challengeId}/leave`);
@@ -248,19 +262,29 @@ export function CommunityHub() {
                   </div>
 
                   {/* Join / Leave button */}
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
                     onClick={() => handleJoinLeave(challenge._id)}
-                    className={`relative w-full py-3 rounded-xl overflow-hidden border transition-all duration-300 font-semibold ${
+                    className={`relative w-full py-4 rounded-xl overflow-hidden border font-semibold cursor-pointer transition-all duration-500 ${
                       isJoined
-                        ? 'bg-white/10 border-red-500/30 text-red-400 hover:bg-red-500/10'
-                        : 'border-white/20 hover:border-white/40'
-                    }`}>
-                    {!isJoined && (
-                      <motion.div initial={{ y: '100%' }} whileHover={{ y: 0 }} transition={{ duration: 0.4, ease: "easeOut" }}
-                        className="absolute inset-0" style={{ backgroundColor: challenge.color }} />
-                    )}
-                    <span className={`relative z-10 transition-colors duration-300 ${!isJoined ? 'group-hover/btn:text-[#050505]' : ''}`}>
-                      {isJoined ? "Leave Challenge" : "Join Challenge"}
+                        ? 'border-red-500/40 text-red-400 hover:bg-red-500/15'
+                        : 'border-white/20 hover:border-transparent'
+                    }`}
+                    style={!isJoined ? { background: `linear-gradient(135deg, ${challenge.color}22, ${challenge.color}11)` } : {}}
+                  >
+                    <motion.div
+                      className="absolute inset-0 rounded-xl"
+                      initial={false}
+                      animate={{ opacity: isJoined ? 0 : 1 }}
+                      whileHover={{ opacity: 1 }}
+                      style={{ background: `linear-gradient(135deg, ${challenge.color}, ${challenge.color}cc)` }}
+                      transition={{ duration: 0.4 }}
+                    />
+                    <span className={`relative z-10 transition-colors duration-300 ${
+                      isJoined ? '' : 'text-white group-hover:text-[#050505]'
+                    }`} style={!isJoined ? { color: '#050505' } : {}}>
+                      {isJoined ? "✕ Leave Challenge" : "🚀 Join Challenge"}
                     </span>
                   </motion.button>
                 </motion.div>

@@ -7,9 +7,11 @@ By combining real-time carbon footprint calculations with gamification and AI-po
 ## ✨ Features
 
 - **🧮 Interactive Carbon Footprint Calculator:** Calculate your CO2 emissions across Transport, Energy, Diet, and Shopping.
+- **🌍 3D Interactive Earth Animation:** A lightweight, custom Three.js shader-based Earth animation on the landing page for a premium feel.
 - **🏆 Gamification & Progression:** Earn EcoPoints, build daily streaks, and level up from Bronze to Platinum by logging green actions.
 - **🤖 AI Sustainability Advisor:** Receive highly specific, actionable, and personalized tips powered by OpenAI based on your highest emission categories.
 - **📊 Global Data Viz (Live AQI):** Search for any city worldwide to view real-time Air Quality Index (AQI) data and health advisories powered by Open-Meteo.
+- **📄 Downloadable PDF Reports:** Generate monthly analytic reports of your carbon footprint breakdown and progress.
 - **👥 Community Challenges:** Organizers can create challenges. Users can join to hit shared sustainability metrics.
 - **🏅 Leaderboards:** Compete individually or as a team with weekly, monthly, and all-time ranking filters.
 - **🔐 Secure Authentication:** Role-based access control (User, Organizer, Admin) with customizable sustainability profiles.

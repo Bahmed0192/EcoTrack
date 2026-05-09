@@ -51,7 +51,7 @@ router.post('/register', async (req, res) => {
       { expiresIn: 360000 },
       (err, token) => {
         if (err) throw err;
-        res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, team_name: user.team_name } });
+        res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, team_name: user.team_name, total_eco_points: user.total_eco_points, streak_days: user.streak_days } });
       }
     );
   } catch (err) {
@@ -90,7 +90,7 @@ router.post('/login', async (req, res) => {
       { expiresIn: 360000 },
       (err, token) => {
         if (err) throw err;
-        res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, team_name: user.team_name } });
+        res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, team_name: user.team_name, total_eco_points: user.total_eco_points, streak_days: user.streak_days } });
       }
     );
   } catch (err) {

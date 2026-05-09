@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { EarthAnimation } from "./EarthAnimation";
 
 export function HeroSection() {
   return (
@@ -63,7 +64,7 @@ export function HeroSection() {
           Join the movement towards sustainable living. Monitor, analyze, and reduce your environmental impact with AI-powered insights and real-time global data.
         </motion.p>
 
-        {/* 3D Earth Placeholder */}
+        {/* 3D Earth Animation */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -72,28 +73,8 @@ export function HeroSection() {
           style={{ width: 'min(500px, 90vw)', height: 'min(500px, 90vw)' }}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/30 via-[#3B82F6]/20 to-[#10B981]/30 rounded-full blur-[80px]" />
-          <div className="relative w-full h-full rounded-full backdrop-blur-[24px] bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-            {/* Animated gradient orb */}
-            <motion.div
-              animate={{
-                scale: [1, 1.2, 1],
-                rotate: [0, 180, 360],
-              }}
-              transition={{
-                duration: 20,
-                repeat: Infinity,
-                ease: "linear",
-              }}
-              className="absolute w-[70%] h-[70%] bg-gradient-to-br from-[#10B981] to-[#3B82F6] rounded-full opacity-40 blur-[60px]"
-            />
-
-            {/* Grid overlay for 3D effect */}
-            <div className="absolute inset-0 opacity-20" style={{
-              backgroundImage: `radial-gradient(circle, rgba(16, 185, 129, 0.3) 1px, transparent 1px)`,
-              backgroundSize: '30px 30px',
-            }} />
-
-            <span className="relative text-white/40 text-sm">3D Earth Animation</span>
+          <div className="relative w-full h-full">
+            <EarthAnimation />
           </div>
         </motion.div>
 

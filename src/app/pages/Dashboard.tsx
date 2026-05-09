@@ -57,16 +57,26 @@ export function Dashboard() {
   const totalPoints = actions.reduce((sum, a) => sum + a.points_earned, 0);
   const totalCO2Saved = actions.reduce((sum, a) => sum + a.co2_saved, 0);
 
-  // Build weekly data from actions
+  // Build weekly data — group ALL logged actions by day of week
   const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const weeklyData = weekDays.map((day, i) => {
+  const weeklyRawData = weekDays.map((day, i) => {
+    // Map Mon=0 to JS getDay() where Mon=1, Tue=2, ..., Sun=0
+    const jsDay = (i + 1) % 7;
     const dayActions = actions.filter(a => {
       const d = new Date(a.logged_at);
-      return d.getDay() === (i + 1) % 7;
+      return d.getDay() === jsDay;
     });
     const pts = dayActions.reduce((s, a) => s + a.points_earned, 0);
-    return { day, value: Math.min(pts, 100) || Math.floor(Math.random() * 40 + 30) };
+    return { day, value: pts, count: dayActions.length };
   });
+
+  // Scale bars relative to max so chart is always proportionally filled
+  const maxWeeklyValue = Math.max(...weeklyRawData.map(d => d.value), 1);
+  const weeklyData = weeklyRawData.map(d => ({
+    ...d,
+    barHeight: d.value > 0 ? Math.max((d.value / maxWeeklyValue) * 100, 8) : 0,
+  }));
+  const hasWeeklyData = weeklyData.some(d => d.value > 0);
 
   // Get level info
   const getLevel = (points: number) => {
@@ -130,7 +140,7 @@ export function Dashboard() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
           {[
-            { label: "Total CO₂ Saved", value: `${totalCO2Saved.toFixed(1)} kg`, change: "+12%", color: "#10B981" },
+            { label: "Total CO₂ Saved", value: `${totalCO2Saved.toFixed(1)} kg`, change: `${actions.length} actions`, color: "#10B981" },
             { label: "Daily Score", value: `${Math.min(Math.floor(totalPoints / 100), 100)}/100`, change: "+5", color: "#3B82F6" },
             { label: "Current Streak", value: `${user?.streak_days || 0} days`, change: "🔥", color: "#F59E0B" },
             { label: "EcoPoints", value: (user?.total_eco_points || totalPoints).toLocaleString(), change: `${level.icon} ${level.name}`, color: "#10B981" },
@@ -175,23 +185,35 @@ export function Dashboard() {
                 className="lg:col-span-2 backdrop-blur-[24px] bg-white/5 border border-white/10 rounded-3xl p-8"
               >
                 <h3 className="mb-8" style={{ fontSize: '24px', fontWeight: 600 }}>Weekly Progress</h3>
-                <div className="flex items-end justify-between gap-4 h-64">
-                  {weeklyData.map((data, index) => (
-                    <div key={data.day} className="flex-1 flex flex-col items-center gap-3">
-                      <motion.div
-                        initial={{ height: 0 }}
-                        animate={{ height: `${data.value}%` }}
-                        transition={{ duration: 0.8, delay: 0.1 * index }}
-                        className="w-full bg-gradient-to-t from-[#10B981] to-[#3B82F6] rounded-t-lg relative group"
-                      >
-                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[24px] bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-xs whitespace-nowrap">
-                          {data.value} pts
-                        </div>
-                      </motion.div>
-                      <span className="text-white/60 text-sm">{data.day}</span>
-                    </div>
-                  ))}
-                </div>
+                {hasWeeklyData ? (
+                  <div className="flex items-end justify-between gap-4 h-64">
+                    {weeklyData.map((data, index) => (
+                      <div key={data.day} className="flex-1 flex flex-col items-center gap-3">
+                        <motion.div
+                          initial={{ height: 0 }}
+                          animate={{ height: `${data.barHeight}%` }}
+                          transition={{ duration: 0.8, delay: 0.1 * index, ease: "easeOut" }}
+                          className="w-full bg-gradient-to-t from-[#10B981] to-[#3B82F6] rounded-t-lg relative group cursor-pointer"
+                          style={{ minHeight: data.value > 0 ? '12px' : '0px' }}
+                        >
+                          <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[24px] bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-xs whitespace-nowrap z-10">
+                            <span className="font-bold text-[#10B981]">{data.value}</span> pts ({data.count} actions)
+                          </div>
+                        </motion.div>
+                        <span className="text-white/60 text-sm">{data.day}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-64 text-white/40">
+                    <div className="text-5xl mb-4">📊</div>
+                    <p className="text-lg font-medium mb-2">No activity yet this week</p>
+                    <p className="text-sm">Log eco-actions to see your progress here!</p>
+                    <Link to="/actions" className="mt-4 px-6 py-2 bg-[#10B981] text-[#050505] font-semibold rounded-xl text-sm hover:scale-105 transition-transform">
+                      Log Your First Action
+                    </Link>
+                  </div>
+                )}
               </motion.div>
 
               {/* Quick Actions */}

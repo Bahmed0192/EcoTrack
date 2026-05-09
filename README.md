@@ -15,7 +15,7 @@ By combining real-time carbon footprint calculations with gamification and AI-po
 - **📄 Downloadable PDF Reports:** Generate monthly analytic reports of your carbon footprint breakdown and progress.
 - **👥 Community Challenges:** Organizers can create challenges. Users can join to hit shared sustainability metrics.
 - **🏅 Leaderboards:** Compete individually or as a team with weekly, monthly, and all-time ranking filters.
-- **🔐 Secure Authentication:** Role-based access control (User, Organizer, Admin) with customizable sustainability profiles.
+- **🔐 Secure & Hardened:** Features strict role-based access control, rate limiting, Helmet HTTP headers, NoSQL injection prevention (Zod validation), and restricted CORS configurations for robust security.
 
 ## 🛠️ Tech Stack
 
@@ -56,8 +56,9 @@ Create a `.env` file in the `server` directory and add the following:
 ```env
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
+JWT_SECRET=your_jwt_secret_min_32_chars
 OPENAI_API_KEY=your_openai_api_key
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
 ```
 Start the backend server:
 ```bash

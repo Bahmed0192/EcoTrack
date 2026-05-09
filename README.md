@@ -80,4 +80,4 @@ The app will be running at `http://localhost:5173`.
 Contributions, issues, and feature requests are welcome!
 
 ## 📜 License
-This project is for educational and hackathon purposes.
+This project is for educational purpose only.
